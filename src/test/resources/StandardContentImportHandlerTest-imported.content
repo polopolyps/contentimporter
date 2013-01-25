@@ -1,0 +1,5 @@
+id: quote-external-id
+major:Article
+inputtemplate:nrk.input.articleelement.quote
+name:Quote
+component:quote:value:This is a quote!
