@@ -29,6 +29,14 @@
 		</snapshotRepository>
 	</distributionManagement>
 
+   <scm>
+    <connection>scm:git:git@github.com:polopolyps/contentimporter.git</connection>
+    <developerConnection>scm:git:git@github.com:polopolyps/contentimporter.git</developerConnection>
+    <url>https://github.com/git@github.com:polopolyps/contentimporter.git</url>
+   </scm>
+
+
+
 	<dependencies>
 		<dependency>
 			<groupId>com.polopoly</groupId>
