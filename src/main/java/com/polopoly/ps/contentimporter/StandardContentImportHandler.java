@@ -119,9 +119,10 @@ public class StandardContentImportHandler implements ContentImportHandler {
 
     protected static StringBuffer getFileContents(URL resourceURL) throws IOException {
         InputStream inputStream = resourceURL.openStream();
+        BufferedReader reader = null;
         try {
             StringBuffer stringBuffer = new StringBuffer();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            reader = new BufferedReader(new InputStreamReader(inputStream));
             int c = reader.read();
             while (c != -1) {
                 stringBuffer.append((char) c);
@@ -129,8 +130,8 @@ public class StandardContentImportHandler implements ContentImportHandler {
             return stringBuffer;
         }
         finally {
-            if(inputStream != null)
-                inputStream.close();
+            if(reader != null)
+                reader.close();
         }
     }
 
