@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.polopoly:polopoly:10.6.0-bc91117">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/polopoly/polopoly/10.6.0-bc91117/polopoly-10.6.0-bc91117.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/polopoly/polopoly/10.6.0-bc91117/polopoly-10.6.0-bc91117-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/polopoly/polopoly/10.6.0-bc91117/polopoly-10.6.0-bc91117-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

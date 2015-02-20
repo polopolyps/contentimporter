@@ -1,10 +1,7 @@
 package com.polopoly.ps.contentimporter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.URL;
+import java.io.*;
+import java.net.*;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -49,7 +46,7 @@ public class StandardContentImportHandler implements ContentImportHandler {
         importContentResources(resources);
     }
 
-    private void importContentResources(Set<URL> resources) {
+    protected void importContentResources(Set<URL> resources) {
         if (resources == null) {
             LOGGER.log(Level.WARNING, WARNING_RESOURCE_SET_WAS_NULL);
             System.err.println(WARNING_RESOURCE_SET_WAS_NULL);
@@ -61,13 +58,18 @@ public class StandardContentImportHandler implements ContentImportHandler {
             for (URL resourceURL : resources) {
                 if (isValidResource(resourceURL)) {
 
-                    String fileName = resourceURL.getFile();
+                    String path = resourceURL.getPath();
+                    if(path.contains("!")) {
+                        path = path.substring(path.indexOf("!"));
+                    }
+                    String fileName = path.substring(path.indexOf("/"));
 
                     if (fileName.endsWith(".content")) {
 
+                        InputStream inputStream = null;
                         try {
 
-                            InputStream inputStream = new FileInputStream(new File(fileName));
+                            inputStream = resourceURL.openStream();
 
                             TextContentParser textContentParser =
                                 new TextContentParser(inputStream, resourceURL, fileName);
@@ -89,10 +91,18 @@ public class StandardContentImportHandler implements ContentImportHandler {
                             LOGGER.log(Level.SEVERE, SEVERE_CONTENT_IMPORT_FAILED, e);
                             System.err.println(SEVERE_CONTENT_IMPORT_FAILED + e.getMessage());
                         }
+                        finally {
+                            if(inputStream != null)
+                                try {
+                                    inputStream.close();
+                                } catch (IOException e) {
+                                    LOGGER.log(Level.WARNING, "Caught exception while trying to close input stream in content import", e);
+                                }
+                        }
                     } else if (fileName.endsWith(".xml")) {
                         try {
-
-                            documentImporter.importXML(new File(fileName));
+                            StringBuffer stringBuffer = getFileContents(resourceURL);
+                            documentImporter.importXML(stringBuffer.toString());
 
                             LOGGER.log(Level.INFO, String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
                             System.out.println(String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
@@ -107,23 +117,49 @@ public class StandardContentImportHandler implements ContentImportHandler {
         }
     }
 
-    private boolean isValidResource(URL resourceURL) {
+    protected static StringBuffer getFileContents(URL resourceURL) throws IOException {
+        InputStream inputStream = resourceURL.openStream();
+        try {
+            StringBuffer stringBuffer = new StringBuffer();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            int c = reader.read();
+            while (c != -1) {
+                stringBuffer.append((char) c);
+            }
+            return stringBuffer;
+        }
+        finally {
+            if(inputStream != null)
+                inputStream.close();
+        }
+    }
 
-        if (resourceURL == null || !(new File(resourceURL.getFile()).exists())) {
-            LOGGER.log(Level.WARNING, String.format(WARNING_RESOURCE_FILE_NOT_FOUND,
-                                                    resourceURL != null ? resourceURL.toString() : null));
-            System.err.println(String.format(WARNING_RESOURCE_FILE_NOT_FOUND,
-                                             resourceURL != null ? resourceURL.toString() : null));
+    protected boolean isValidResource(URL resourceURL) {
 
+        try {
+            if(resourceURL == null) {
+                LOGGER.log(Level.WARNING, String.format(WARNING_RESOURCE_FILE_NOT_FOUND, "null"));
+                return false;
+            }
+            URLConnection urlConnection = resourceURL.openConnection();
+            urlConnection.setUseCaches(false);
+            urlConnection.setDoInput(false);
+            urlConnection.setDoOutput(false);
+            urlConnection.connect();
+
+
+            if (!resourceURL.toString().endsWith(".content") && !resourceURL.toString().endsWith(".xml")) {
+                LOGGER.log(Level.WARNING, String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
+                System.err.println(String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
+                return false;
+
+            } else {
+                return true;
+            }
+
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, String.format(WARNING_RESOURCE_FILE_NOT_FOUND, resourceURL.toString()));
             return false;
-
-        } else if (!resourceURL.toString().endsWith(".content") && !resourceURL.toString().endsWith(".xml")) {
-            LOGGER.log(Level.WARNING, String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
-            System.err.println(String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
-            return false;
-
-        } else {
-            return true;
         }
     }
 }

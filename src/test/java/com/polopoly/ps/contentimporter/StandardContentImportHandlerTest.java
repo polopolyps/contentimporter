@@ -2,9 +2,7 @@ package com.polopoly.ps.contentimporter;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,7 +10,9 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,6 +29,7 @@ import com.polopoly.cm.xml.DocumentImporter;
 import com.polopoly.ps.contentimporter.hotdeploy.text.TextContentParser;
 import com.polopoly.ps.contentimporter.hotdeploy.text.TextContentSet;
 import com.polopoly.ps.contentimporter.hotdeploy.text.TextContentXmlWriter;
+import org.mockito.Matchers;
 
 public class StandardContentImportHandlerTest {
 
@@ -132,7 +134,8 @@ public class StandardContentImportHandlerTest {
         resources.add(resourceURL);
 
         Exception toBeThrown = new Exception("Exception");
-        doThrow(toBeThrown).when(documentImporter).importXML(new File(resourceURL.getFile()));
+        String xml = StandardContentImportHandler.getFileContents(resourceURL).toString();
+        doThrow(toBeThrown).when(documentImporter).importXML(xml);
 
         target.importContent(resources);
 
@@ -179,7 +182,7 @@ public class StandardContentImportHandlerTest {
 
         target.importContent(resources);
 
-        verify(documentImporter).importXML(file);
+        verify(documentImporter).importXML(StandardContentImportHandler.getFileContents(resourceURL).toString());
         verify(LOGGER).log(Level.INFO,
                            String.format(StandardContentImportHandler.INFO_CONTENT_IMPORT_SUCCEDED, filePath));
     }
@@ -231,5 +234,31 @@ public class StandardContentImportHandlerTest {
                      String.format(StandardContentImportHandler.INFO_CONTENT_IMPORT_SUCCEDED, filePath3));
         assertEquals(outputList.get(3),
                      String.format(StandardContentImportHandler.INFO_CONTENT_IMPORT_SUCCEDED, filePath4));
+    }
+
+    @Test
+    public void isValidResourceShouldHandleFilesInJARs() throws MalformedURLException {
+        String resourceBasePath = getClass().getClassLoader().getResource("StandardContentImportHandlerTest.jar").toString();
+        URL resourceURL = new URL("jar:" + resourceBasePath + "!/afile.content");
+        Assert.assertTrue("Valid resource was found not valid!", target.isValidResource(resourceURL));
+    }
+
+    @Test
+    public void isValidResourceShouldHandleFilesNOTInJARs() throws MalformedURLException {
+        URL resourceURL = getClass().getClassLoader().getResource("anotherfile.content");
+        Assert.assertTrue("Valid resource was found not valid!", target.isValidResource(resourceURL));
+    }
+
+    @Test
+    public void importContentShouldHandleFilesinJars() throws Exception {
+        DocumentImporter docImporter = mock(DocumentImporter.class);
+        StandardContentImportHandler importHandler = new StandardContentImportHandler(docImporter);
+
+        String resourceBasePath = getClass().getClassLoader().getResource("StandardContentImportHandlerTest.jar").toString();
+        URL resourceURL = new URL("jar:" + resourceBasePath + "!/afile.content");
+        HashSet<URL> urls = new HashSet<URL>();
+        urls.add(resourceURL);
+        importHandler.importContentResources(urls);
+        verify(docImporter).importXML(Matchers.contains("<batch xmlns=\"http://www.polopoly.com/polopoly/cm/xmlio\">"));
     }
 }
