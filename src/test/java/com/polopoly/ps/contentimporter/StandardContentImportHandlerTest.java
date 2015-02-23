@@ -261,4 +261,17 @@ public class StandardContentImportHandlerTest {
         importHandler.importContentResources(urls);
         verify(docImporter).importXML(Matchers.contains("<batch xmlns=\"http://www.polopoly.com/polopoly/cm/xmlio\">"));
     }
+
+    @Test
+    public void importContentShouldHandleXMLFilesinJars() throws Exception {
+        DocumentImporter docImporter = mock(DocumentImporter.class);
+        StandardContentImportHandler importHandler = new StandardContentImportHandler(docImporter);
+
+        String resourceBasePath = getClass().getClassLoader().getResource("StandardContentImportHandlerTest.jar").toString();
+        URL resourceURL = new URL("jar:" + resourceBasePath + "!/afile.xml");
+        HashSet<URL> urls = new HashSet<URL>();
+        urls.add(resourceURL);
+        importHandler.importContentResources(urls);
+        verify(docImporter).importXML(Matchers.contains("<batch xmlns=\"http://www.polopoly.com/polopoly/cm/xmlio\">"));
+    }
 }

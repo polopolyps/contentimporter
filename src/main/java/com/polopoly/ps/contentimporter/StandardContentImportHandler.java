@@ -1,16 +1,20 @@
 package com.polopoly.ps.contentimporter;
 
-import java.io.*;
-import java.net.*;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.polopoly.cm.xml.DocumentImporter;
 import com.polopoly.ps.contentimporter.hotdeploy.text.TextContentParser;
 import com.polopoly.ps.contentimporter.hotdeploy.text.TextContentSet;
 import com.polopoly.ps.contentimporter.hotdeploy.text.TextContentXmlWriter;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implementation of {@link ContentImportHandler} that uses the Polopoly product
@@ -119,13 +123,14 @@ public class StandardContentImportHandler implements ContentImportHandler {
 
     protected static StringBuffer getFileContents(URL resourceURL) throws IOException {
         InputStream inputStream = resourceURL.openStream();
-        BufferedReader reader = null;
+        InputStreamReader reader = null;
         try {
             StringBuffer stringBuffer = new StringBuffer();
-            reader = new BufferedReader(new InputStreamReader(inputStream));
+            reader = new InputStreamReader(inputStream);
             int c = reader.read();
             while (c != -1) {
                 stringBuffer.append((char) c);
+                c = reader.read();
             }
             return stringBuffer;
         }
