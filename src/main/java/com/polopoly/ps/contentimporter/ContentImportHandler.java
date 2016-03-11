@@ -10,7 +10,7 @@ import java.util.Set;
  * 
  */
 public interface ContentImportHandler {
-    public void importContent(Set<URL> resources);
+    public void importContent(Set<URL> resources) throws ContentImportHandlerException;
 
-    public void importContentByImportOrder(LinkedHashSet<URL> resources);
+    public void importContentByImportOrder(LinkedHashSet<URL> resources) throws ContentImportHandlerException;
 }

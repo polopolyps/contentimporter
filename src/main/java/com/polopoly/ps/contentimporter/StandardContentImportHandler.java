@@ -35,28 +35,51 @@ public class StandardContentImportHandler implements ContentImportHandler {
     protected static final String SEVERE_CONTENT_IMPORT_FAILED = "Content import failed! See error message below:";
 
     protected static final String INFO_CONTENT_IMPORT_SUCCEDED = "Content import of: '%1$s' succeeded.";
+    
+    private final ContentImportLogger logger;
 
     private final DocumentImporter documentImporter;
 
     public StandardContentImportHandler(DocumentImporter documentImporter) {
         this.documentImporter = documentImporter;
+        this.logger = new ContentImportLogger() {
+			
+			public void warning(String message) {
+				System.out.println(message);
+			}
+			
+			public void info(String message) {
+				System.out.println(message);
+			}
+			
+			public void error(String message) {
+				System.out.println(message);
+			}
+			
+			public void debug(String message) {
+				System.out.println(message);
+			}
+		};
+    }
+    
+    public StandardContentImportHandler(DocumentImporter documentImporter, ContentImportLogger logger) {
+        this.documentImporter = documentImporter;
+        this.logger = logger;
     }
 
-    public void importContentByImportOrder(LinkedHashSet<URL> resources) {
+    public void importContentByImportOrder(LinkedHashSet<URL> resources) throws ContentImportHandlerException {
         importContentResources(resources);
     }
 
-    public void importContent(Set<URL> resources) {
+    public void importContent(Set<URL> resources) throws ContentImportHandlerException {
         importContentResources(resources);
     }
 
-    protected void importContentResources(Set<URL> resources) {
+    protected void importContentResources(Set<URL> resources) throws ContentImportHandlerException {
         if (resources == null) {
-            LOGGER.log(Level.WARNING, WARNING_RESOURCE_SET_WAS_NULL);
-            System.err.println(WARNING_RESOURCE_SET_WAS_NULL);
+        		throw new IllegalArgumentException(WARNING_RESOURCE_SET_WAS_NULL);
         } else if (resources.isEmpty()) {
-            LOGGER.log(Level.WARNING, WARNING_RESOURCE_SET_WAS_EMPTY);
-            System.err.println(WARNING_RESOURCE_SET_WAS_EMPTY);
+            LOGGER.log(Level.FINE, WARNING_RESOURCE_SET_WAS_EMPTY);
         } else {
 
             for (URL resourceURL : resources) {
@@ -89,11 +112,11 @@ public class StandardContentImportHandler implements ContentImportHandler {
 
                             documentImporter.importXML(xml);
                             LOGGER.log(Level.INFO, String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
-                            System.out.println(String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
+                            
+                            logger.info(String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
 
                         } catch (Exception e) {
-                            LOGGER.log(Level.SEVERE, SEVERE_CONTENT_IMPORT_FAILED, e);
-                            System.err.println(SEVERE_CONTENT_IMPORT_FAILED + e.getMessage());
+                        	    throw new ContentImportHandlerException(SEVERE_CONTENT_IMPORT_FAILED, e);
                         }
                         finally {
                             if(inputStream != null)
@@ -109,12 +132,13 @@ public class StandardContentImportHandler implements ContentImportHandler {
                             documentImporter.importXML(stringBuffer.toString());
 
                             LOGGER.log(Level.INFO, String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
-                            System.out.println(String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
+                            
+                            
+                            logger.info(String.format(INFO_CONTENT_IMPORT_SUCCEDED, fileName));
 
-                        } catch (Exception e) {
-                            LOGGER.log(Level.SEVERE, SEVERE_CONTENT_IMPORT_FAILED, e);
-                            System.err.println(SEVERE_CONTENT_IMPORT_FAILED + e.getMessage());
-                        }
+						} catch (Exception e) {
+							throw new ContentImportHandlerException(SEVERE_CONTENT_IMPORT_FAILED, e);
+						}
                     }
                 }
             }
@@ -156,7 +180,8 @@ public class StandardContentImportHandler implements ContentImportHandler {
 
             if (!resourceURL.toString().endsWith(".content") && !resourceURL.toString().endsWith(".xml")) {
                 LOGGER.log(Level.WARNING, String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
-                System.err.println(String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
+                
+                logger.error(String.format(WARNING_RESOURCE_TYPE_NOT_SUPPORTED, resourceURL.toString()));
                 return false;
 
             } else {

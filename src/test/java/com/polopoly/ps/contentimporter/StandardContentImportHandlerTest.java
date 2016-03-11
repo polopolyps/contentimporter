@@ -12,7 +12,6 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -46,23 +45,19 @@ public class StandardContentImportHandlerTest {
         StandardContentImportHandler.LOGGER = LOGGER;
     }
 
-    @Test
-    public void shouldLogWarningIfResourceSetIsNull() {
-
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldLogWarningIfResourceSetIsNull() throws ContentImportHandlerException {
         Set<URL> resources = null;
         target.importContent(resources);
-
-        verify(LOGGER).log(Level.WARNING, StandardContentImportHandler.WARNING_RESOURCE_SET_WAS_NULL);
-
     }
 
     @Test
-    public void shouldLogWarningIfResourceSetIsEmpty() {
+    public void shouldLogWarningIfResourceSetIsEmpty() throws ContentImportHandlerException {
 
         Set<URL> resources = new HashSet<URL>();
         target.importContent(resources);
 
-        verify(LOGGER).log(Level.WARNING, StandardContentImportHandler.WARNING_RESOURCE_SET_WAS_EMPTY);
+        verify(LOGGER).log(Level.FINE, StandardContentImportHandler.WARNING_RESOURCE_SET_WAS_EMPTY);
 
     }
 
@@ -107,7 +102,7 @@ public class StandardContentImportHandlerTest {
                                          resource.toString()));
     }
 
-    @Test
+    @Test(expected = ContentImportHandlerException.class)
     public void shouldForDotContentCatchExceptionAndLog() throws Exception {
         String fileName = "StandardContentImportHandlerTest-imported.content";
 
@@ -121,10 +116,9 @@ public class StandardContentImportHandlerTest {
 
         target.importContent(resources);
 
-        verify(LOGGER).log(Level.SEVERE, StandardContentImportHandler.SEVERE_CONTENT_IMPORT_FAILED, toBeThrown);
     }
 
-    @Test
+    @Test(expected = ContentImportHandlerException.class)
     public void shouldForDotXMLCatchExceptionAndLog() throws Exception {
         String fileName = "StandardContentImportHandlerTest.xml";
 
@@ -139,7 +133,6 @@ public class StandardContentImportHandlerTest {
 
         target.importContent(resources);
 
-        verify(LOGGER).log(Level.SEVERE, StandardContentImportHandler.SEVERE_CONTENT_IMPORT_FAILED, toBeThrown);
     }
 
     @Test

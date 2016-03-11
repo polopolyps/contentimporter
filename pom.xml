@@ -4,12 +4,12 @@
 	<groupId>com.polopoly.ps</groupId>
 	<artifactId>contentimporter</artifactId>
 	<packaging>jar</packaging>
-	<version>1.2</version>
+	<version>1.3-SNAPSHOT</version>
 	<name>contentimporter</name>
 
 
 	<properties>
-		<polopoly.version>10.6.0-bc91117</polopoly.version>
+		<polopoly.version>10.14.0</polopoly.version>
 	</properties>
 
 	<distributionManagement>
